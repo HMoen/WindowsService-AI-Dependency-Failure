@@ -8,7 +8,8 @@
 
     using Microsoft.ApplicationInsights;
     using Microsoft.ApplicationInsights.DataContracts;
-    using Microsoft.ApplicationInsights.Extensibility;
+    using Microsoft.Extensions.DependencyInjection;
+    using Microsoft.Extensions.Logging;
 
     /// <inheritdoc />
     /// <summary>Service to test AI failure.</summary>
@@ -17,8 +18,8 @@
         /// <summary>Telemetry client.</summary>
         private readonly TelemetryClient telemetryClient;
 
-        /// <summary>HTTP client.</summary>
-        private readonly HttpClient httpClient;
+        /// <summary>Service logger.</summary>
+        private readonly ILogger<TestService> logger;
 
         /// <inheritdoc />
         /// <summary>Initializes a new instance of the <see cref="TestService" /> class.</summary>
@@ -27,8 +28,13 @@
             InitializeComponent();
 
             var key = ConfigUtility.GetKeyValue();
-            this.telemetryClient = new TelemetryClient(new TelemetryConfiguration(key)) { InstrumentationKey = key };
-            this.httpClient = new HttpClient();
+            var servicesCollection = new ServiceCollection();
+            servicesCollection.AddApplicationInsightsTelemetryWorkerService(key);
+            var serviceProvider = servicesCollection.BuildServiceProvider();
+
+            ////this.telemetryClient = new TelemetryClient(new TelemetryConfiguration(key)) { InstrumentationKey = key };
+            this.telemetryClient = serviceProvider.GetRequiredService<TelemetryClient>();
+            this.logger = serviceProvider.GetRequiredService<ILogger<TestService>>();
         }
 
         /// <summary>Perform action causing AI failure.</summary>
@@ -37,13 +43,18 @@
             Task.Run(
                 async () =>
                     {
+                        var httpClient = new HttpClient();
+
                         while (true)
                         {
                             try
                             {
                                 using (telemetryClient.StartOperation<RequestTelemetry>("operation"))
                                 {
-                                    await this.httpClient.GetAsync("https://bing.com").ConfigureAwait(false);
+                                    logger.LogWarning("A sample warning message.");
+                                    logger.LogInformation("Calling bing.com");
+                                    var responseMessage = await httpClient.GetAsync("https://bing.com").ConfigureAwait(false);
+                                    logger.LogInformation("Calling bing completed with status:" + responseMessage.StatusCode);
                                     telemetryClient.TrackEvent("Bing call event completed");
                                 }
                             }
