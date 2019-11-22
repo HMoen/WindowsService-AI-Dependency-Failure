@@ -5,8 +5,8 @@ Illustrates dependency load exception when AI TelemetryClient.StartOperation met
 [MS Visual Studio Intaller Project](https://marketplace.visualstudio.com/items?itemName=VisualStudioClient.MicrosoftVisualStudio2017InstallerProjects&ssr=false) adds incorrect assemblies to the installer package.
 
 
-#### Exception thrown:
-> The type initializer for 'PerTypeValues`1' threw an exception.
+#### Exception thrown when starting the installed windows service:
+> The type initializer for 'PerTypeValues1' threw an exception.
 
 > System.BadImageFormatException: Could not load file or assembly System.Runtime.CompilerServices.Unsafe, Version=4.0.4.1, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a or one of its dependencies.
 
